@@ -18,12 +18,14 @@ const __dirname = path.dirname(__filename);
 app.get("/api/punches", async (req, res) => {
   try {
     const punches = await getAllPunches();
+    console.log("✅ Punches fetched:", punches);
     res.json(punches);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch punches" });
+    console.error("❌ Error in /api/punches:", err.message, err.stack);
+    res.status(500).json({ error: err.message });
   }
 });
+
 
 // ✅ API: Punch in
 app.post("/api/punchin", async (req, res) => {
