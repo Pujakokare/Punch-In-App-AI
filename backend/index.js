@@ -42,7 +42,7 @@ app.get("/api/punchin", async (req, res) => {
   try {
     const query = `
       SELECT META().id, timestamp, localTime, manual, note
-      FROM \`${COUCHBASE_BUCKET}\`
+      FROM \`punchin\`
       ORDER BY timestamp DESC
       LIMIT 10;
     `;
