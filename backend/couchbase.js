@@ -1,39 +1,30 @@
-// Helper to connect to Couchbase
-const couchbase = require('couchbase');
+import couchbase from "couchbase";
 
-let cluster, bucket, collection;
+let bucket;
 
-/**
- * Call initCouchbase() once at startup.
- * Reads env vars:
- * - COUCHBASE_CONNSTR
- * - COUCHBASE_USERNAME
- * - COUCHBASE_PASSWORD
- * - COUCHBASE_BUCKET
- */
-async function initCouchbase() {
-  if (cluster) return { cluster, bucket, collection };
-
-  const {
-    COUCHBASE_CONNSTR,
-    COUCHBASE_USERNAME,
-    COUCHBASE_PASSWORD,
-    COUCHBASE_BUCKET,
-  } = process.env;
-
-  if (!COUCHBASE_CONNSTR || !COUCHBASE_USERNAME || !COUCHBASE_PASSWORD || !COUCHBASE_BUCKET) {
-    throw new Error('Missing Couchbase environment variables. Please set COUCHBASE_CONNSTR, COUCHBASE_USERNAME, COUCHBASE_PASSWORD, COUCHBASE_BUCKET');
+export async function connectToCouchbase() {
+  try {
+    const cluster = await couchbase.connect(process.env.COUCHBASE_CONNSTR, {
+      username: process.env.COUCHBASE_USERNAME,
+      password: process.env.COUCHBASE_PASSWORD,
+    });
+    bucket = cluster.bucket(process.env.COUCHBASE_BUCKET);
+    console.log("✅ Connected to Couchbase");
+  } catch (err) {
+    console.error("❌ Couchbase connection failed:", err);
   }
-
-  cluster = await couchbase.connect(COUCHBASE_CONNSTR, {
-    username: COUCHBASE_USERNAME,
-    password: COUCHBASE_PASSWORD,
-  });
-
-  bucket = cluster.bucket(COUCHBASE_BUCKET);
-  collection = bucket.defaultCollection();
-
-  return { cluster, bucket, collection };
 }
 
-module.exports = { initCouchbase };
+export async function insertPunchIn(time) {
+  const collection = bucket.defaultCollection();
+  const id = `punchin_${Date.now()}`;
+  const doc = { id, time, createdAt: new Date().toISOString() };
+  await collection.insert(id, doc);
+  return doc;
+}
+
+export async function getAllPunchIns() {
+  const query = "SELECT META().id, * FROM `" + process.env.COUCHBASE_BUCKET + "` LIMIT 50";
+  const result = await bucket.scope("_default").query(query);
+  return result.rows;
+}
