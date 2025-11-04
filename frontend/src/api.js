@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_URL || "https://punch-in-app-ai.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_URL || " ";
 
 export async function fetchPunches() {
   try {
-    const response = await axios.get(`${API_BASE}/punchin`);
+    const response = await axios.get(`${API_BASE}/punches`);
     return response.data;
   } catch (err) {
     console.error("Failed to load punches:", err);
