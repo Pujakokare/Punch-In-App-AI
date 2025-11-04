@@ -1,3 +1,4 @@
+// backend/index.js
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -13,7 +14,7 @@ app.use(bodyParser.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ API: Get punches
+// ✅ API: Get all punches
 app.get("/api/punches", async (req, res) => {
   try {
     const punches = await getAllPunches();
@@ -24,7 +25,7 @@ app.get("/api/punches", async (req, res) => {
   }
 });
 
-// ✅ API: Save punch
+// ✅ API: Punch in
 app.post("/api/punchin", async (req, res) => {
   try {
     const punch = await savePunch(req.body);
@@ -35,7 +36,7 @@ app.post("/api/punchin", async (req, res) => {
   }
 });
 
-// ✅ Serve frontend build
+// ✅ Serve frontend build (important for Render)
 const frontendPath = path.join(__dirname, "../frontend/build");
 app.use(express.static(frontendPath));
 
@@ -45,7 +46,6 @@ app.get("*", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-
 
 
 
