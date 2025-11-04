@@ -1,15 +1,18 @@
 {
   "name": "punch-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Punch In backend for Render + Couchbase",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "cd frontend && npm install && npm run build"
   },
   "engines": {
     "node": "18.x"
   },
   "dependencies": {
+    "express": "^4.18.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "couchbase": "^4.3.0",
