@@ -42,7 +42,10 @@ app.get("/api/punchin", async (req, res) => {
   try {
     const query = `
       SELECT META().id, timestamp, localTime, manual, note
-      FROM \`punchin\`
+      FROM `punchin`.`_punchin`.`_punchin`
+
+      //FROM `punchin`.`_default`.`_default`--------bucket,collection,scope name
+
       ORDER BY timestamp DESC
       LIMIT 10;
     `;
