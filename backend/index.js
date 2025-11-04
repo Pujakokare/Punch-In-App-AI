@@ -41,11 +41,12 @@ app.get("/", (req, res) => {
 app.get("/api/punchin", async (req, res) => {
   try {
     const query = `
-      SELECT META().id, timestamp, localTime, manual, note
-      FROM \`punchin\`
-      ORDER BY timestamp DESC
-      LIMIT 10;
-    `;
+    SELECT META().id, timestamp, localTime, manual, note
+    FROM \`punchin\`.\`_default\`.\`_default\`
+  ORDER BY timestamp DESC
+  LIMIT 10;
+`;
+  
     const result = await cluster.query(query);
     res.json(result.rows);
   } catch (err) {
