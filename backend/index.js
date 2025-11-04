@@ -1,83 +1,52 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { initCouchbase } = require('./couchbase');
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import { connectToCouchbase, insertPunchIn, getAllPunchIns } from "./couchbase.js";
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Utility: format server time to ISO
-function nowISO() {
-  return new Date().toISOString();
-}
+// 🔹 Resolve __dirname in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Initialize Couchbase connection
-let couch = null;
-initCouchbase()
-  .then(c => { couch = c; console.log('Connected to Couchbase'); })
-  .catch(err => {
-    console.error('Failed to connect to Couchbase:', err);
-    process.exit(1);
-  });
+// ✅ Couchbase connection
+connectToCouchbase();
 
-// POST /api/punch
-// body: { localTime?: string, manual: boolean, note?: string }
-app.post('/api/punch', async (req, res) => {
+// ✅ API endpoints
+app.post("/api/punchin", async (req, res) => {
   try {
-    if (!couch) return res.status(503).json({ error: 'DB not ready' });
-
-    const { collection } = couch;
-    const { localTime, manual = false, note = '' } = req.body;
-
-    const id = 'punch::' + cryptoRandomId();
-    const timestamp = nowISO();
-
-    const doc = {
-      id,
-      timestamp,
-      localTime: localTime || null,
-      manual: !!manual,
-      note: note || ''
-    };
-
-    await collection.upsert(id, doc);
-    return res.status(201).json({ success: true, doc });
+    const { time } = req.body;
+    if (!time) return res.status(400).json({ error: "Time is required" });
+    const result = await insertPunchIn(time);
+    res.json(result);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Server error', details: err.message });
+    res.status(500).json({ error: "Error inserting punch-in" });
   }
 });
 
-// GET /api/punches
-app.get('/api/punches', async (req, res) => {
+app.get("/api/punchin", async (req, res) => {
   try {
-    if (!couch) return res.status(503).json({ error: 'DB not ready' });
-    const { cluster } = couch;
-    const bucketName = process.env.COUCHBASE_BUCKET;
-
-    // Simple N1QL query: list most recent punches
-    const q = `SELECT p.* FROM \`${bucketName}\` p WHERE META(p).id LIKE "punch::%" ORDER BY p.timestamp DESC LIMIT 200;`;
-    const result = await cluster.query(q);
-    const rows = result.rows || [];
-    return res.json(rows);
+    const data = await getAllPunchIns();
+    res.json(data);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Server error', details: err.message });
+    res.status(500).json({ error: "Error retrieving punch-ins" });
   }
 });
 
-// Helper: lightweight random id
-function cryptoRandomId() {
-  // Node 18 has crypto.randomUUID, but we'll fallback
-  try {
-    return require('crypto').randomUUID();
-  } catch (e) {
-    return Math.random().toString(36).slice(2, 10);
-  }
-}
+// ✅ Serve React build
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Punch backend listening on port ${PORT}`);
+// ✅ PORT configuration for Render
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
