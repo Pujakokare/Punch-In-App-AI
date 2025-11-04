@@ -1,6 +1,7 @@
 {
   "name": "punch-in-backend",
   "version": "1.0.0",
+  "type": "module",
   "main": "backend/index.js",
   "scripts": {
     "start": "node backend/index.js",
