@@ -9,11 +9,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// --- Serve frontend build ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const frontendPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(frontendPath));
 
 // --- Couchbase connection ---
 await connectToCouchbase();
@@ -22,7 +17,7 @@ await connectToCouchbase();
 app.get("/api/punchin", async (req, res) => {
   try {
     const punches = await getAllPunches();
-    res.json(punches);
+    res.json(punches || []);     // Always return array
   } catch (err) {
     console.error("❌ Error fetching punches:", err);
     res.status(500).json({ error: err.message });
@@ -39,6 +34,12 @@ app.post("/api/punchin", async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+// --- Serve frontend build ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
 
 // --- For any other route, serve frontend index.html ---
 app.get("*", (req, res) => {
