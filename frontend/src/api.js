@@ -1,29 +1,26 @@
 import axios from "axios";
 
-const API_BASE = "/api";
+const API_URL = process.env.REACT_APP_API_URL || "";
 
-export async function fetchPunches() {
+export const getPunches = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/punches`);
-    return response.data;
-  } catch (err) {
-    console.error("Failed to load punches:", err);
-    throw new Error("Failed to load punches: " + err.message);
+    const res = await axios.get(`${API_URL}/api/punches`);
+    return res.data;
+  } catch (error) {
+    console.error("Failed to load punches:", error.message);
+    throw error;
   }
-}
+};
 
-export async function postPunch(payload) {
+export const postPunch = async (punchTime) => {
   try {
-    const response = await axios.post(`${API_BASE}/punchin`, payload);
-    return response.data;
-  } catch (err) {
-    console.error("Failed to post punch:", err);
-    throw new Error("Failed to post punch: " + err.message);
+    const res = await axios.post(`${API_URL}/api/punchin`, { punchTime });
+    return res.data;
+  } catch (error) {
+    console.error("Failed to post punch:", error.message);
+    throw error;
   }
-}
-
-
-
+};
 
 
 
