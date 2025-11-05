@@ -1,0 +1,12 @@
+{
+  "name": "punch-in-app-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install",
+    "start": "node backend/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
