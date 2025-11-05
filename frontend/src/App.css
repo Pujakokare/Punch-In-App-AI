@@ -1,0 +1,153 @@
+/* Global Layout */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #89f7fe, #66a6ff);
+  color: #222;
+  overflow-x: hidden;
+}
+
+/* App Container */
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 30px 10px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.app-title {
+  font-size: 2.5rem;
+  margin: 10px 0;
+}
+
+.time-display {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.greeting {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.motivation {
+  font-size: 1rem;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+/* Punch Card Section */
+.punch-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.punch-card {
+  background: #ffffffd9;
+  border-radius: 20px;
+  padding: 25px 30px;
+  width: 400px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin: 10px 0;
+  text-align: left;
+}
+
+.note-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.note-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.4);
+}
+
+.btn-punch {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-punch:hover {
+  background: #0056b3;
+}
+
+/* Punch History */
+.punch-history {
+  margin-top: 40px;
+  background: #ffffffd9;
+  border-radius: 20px;
+  padding: 25px;
+  width: 90%;
+  max-width: 800px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.punch-history h2 {
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+}
+
+.footer-note {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #555;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .punch-card, .punch-history {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .app-title {
+    font-size: 2rem;
+  }
+}
