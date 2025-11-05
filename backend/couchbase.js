@@ -1,5 +1,6 @@
 import couchbase from "couchbase";
 
+let cluster;
 let bucket;
 let collection;
 
@@ -12,23 +13,22 @@ export async function connectToCouchbase() {
   } = process.env;
 
   try {
-    console.log("🔗 Connecting to Couchbase...");
-    const cluster = await couchbase.connect(COUCHBASE_CONNSTR, {
-      username: COUCHBASE_USERNAME,
-      password: COUCHBASE_PASSWORD,
-    });
-
-    bucket = cluster.bucket(COUCHBASE_BUCKET);
-    collection = bucket.defaultCollection();
-
-    console.log(`✅ Connected to Couchbase bucket: ${COUCHBASE_BUCKET}`);
+    if (!cluster) {
+      console.log("🔗 Connecting to Couchbase...");
+      cluster = await couchbase.connect(COUCHBASE_CONNSTR, {
+        username: COUCHBASE_USERNAME,
+        password: COUCHBASE_PASSWORD,
+      });
+      bucket = cluster.bucket(COUCHBASE_BUCKET);
+      collection = bucket.defaultCollection();
+      console.log(`✅ Connected to Couchbase bucket: ${COUCHBASE_BUCKET}`);
+    }
   } catch (err) {
     console.error("❌ Couchbase connection error:", err);
     throw err;
   }
 }
 
-// Save a punch record
 export async function savePunch(punch) {
   try {
     const id = `punch::${Date.now()}`;
@@ -41,15 +41,9 @@ export async function savePunch(punch) {
   }
 }
 
-// Get all punch records
 export async function getAllPunches() {
   try {
     const query = `SELECT META().id, * FROM \`${process.env.COUCHBASE_BUCKET}\` LIMIT 100;`;
-    const cluster = await couchbase.connect(process.env.COUCHBASE_CONNSTR, {
-      username: process.env.COUCHBASE_USERNAME,
-      password: process.env.COUCHBASE_PASSWORD,
-    });
-
     const result = await cluster.query(query);
     const punches = result.rows.map(row => row[process.env.COUCHBASE_BUCKET]);
     console.log(`✅ Retrieved ${punches.length} punches`);
@@ -59,6 +53,7 @@ export async function getAllPunches() {
     throw err;
   }
 }
+
 
 
 
