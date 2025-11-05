@@ -1,53 +1,53 @@
 // // backend/index.js
-// import express from "express";
-// import cors from "cors";
-// import bodyParser from "body-parser";
-// import path from "path";
-// import { fileURLToPath } from "url";
-// import { connectToCouchbase, getAllPunches, savePunch } from "./couchbase.js";
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import { connectToCouchbase, getAllPunches, savePunch } from "./couchbase.js";
 
-// const app = express();
-// app.use(cors());
-// app.use(bodyParser.json());
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
 
-// // Get __dirname in ES modules
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+// Connect to Couchbase at startup
+await connectToCouchbase();
 
-// // ✅ API: Get all punches
-// app.get("/api/punches", async (req, res) => {
-//   try {
-//     const punches = await getAllPunches();
-//     console.log("✅ Punches fetched:", punches);
-//     res.json(punches);
-//   } catch (err) {
-//     console.error("❌ Error in /api/punches:", err.message, err.stack);
-//     res.status(500).json({ error: err.message });
-//   }
-// });
+// ✅ API routes
+app.get("/api/punches", async (req, res) => {
+  try {
+    const punches = await getAllPunches();
+    res.json(punches);
+  } catch (err) {
+    console.error("❌ Error fetching punches:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
+app.post("/api/punchin", async (req, res) => {
+  try {
+    const punch = req.body;
+    const saved = await savePunch(punch);
+    res.json(saved);
+  } catch (err) {
+    console.error("❌ Error saving punch:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// // ✅ API: Punch in
-// app.post("/api/punchin", async (req, res) => {
-//   try {
-//     const punch = await savePunch(req.body);
-//     res.json(punch);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Failed to save punch" });
-//   }
-// });
+// ✅ Serve frontend build
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendPath = path.join(__dirname, "../frontend/build");
 
-// // ✅ Serve frontend build (important for Render)
-// const frontendPath = path.join(__dirname, "../frontend/build");
-// app.use(express.static(frontendPath));
+app.use(express.static(frontendPath));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
 
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(frontendPath, "index.html"));
-// });
-
-// const PORT = process.env.PORT || 10000;
-// app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+// ✅ Start server
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 
 
