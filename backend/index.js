@@ -1,123 +1,142 @@
-// // backend/index.js
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import couchbase from "couchbase";
 import path from "path";
 import { fileURLToPath } from "url";
-import { connectToCouchbase, getAllPunches, savePunch } from "./couchbase.js";
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Connect to Couchbase at startup
-await connectToCouchbase();
+const {
+  COUCHBASE_CONNSTR,
+  COUCHBASE_USERNAME,
+  COUCHBASE_PASSWORD,
+  COUCHBASE_BUCKET,
+  PORT = 10000,
+} = process.env;
 
-// ✅ API routes
-app.get("/api/punches", async (req, res) => {
+// ✅ Couchbase connection
+let bucket;
+(async () => {
   try {
-    const punches = await getAllPunches();
-    res.json(punches);
-  } catch (err) {
-    console.error("❌ Error fetching punches:", err);
-    res.status(500).json({ error: err.message });
+    const cluster = await couchbase.connect(COUCHBASE_CONNSTR, {
+      username: COUCHBASE_USERNAME,
+      password: COUCHBASE_PASSWORD,
+    });
+    bucket = cluster.bucket(COUCHBASE_BUCKET);
+    console.log(`✅ Connected to Couchbase bucket: ${COUCHBASE_BUCKET}`);
+  } catch (error) {
+    console.error("❌ Couchbase connection failed:", error);
   }
-});
+})();
 
-app.post("/api/punchin", async (req, res) => {
-  try {
-    const punch = req.body;
-    const saved = await savePunch(punch);
-    res.json(saved);
-  } catch (err) {
-    console.error("❌ Error saving punch:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ✅ Serve frontend build
+// ✅ Serve React build
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendPath = path.join(__dirname, "../frontend/build");
-
-app.use(express.static(frontendPath));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
-
-// ✅ Start server
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import path from "path";
-import { fileURLToPath } from "url";
-import { connectToCouchbase, getAllPunches, savePunch } from "./couchbase.js";
-
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-
-
-// --- Couchbase connection ---
-await connectToCouchbase();
-
-// --- API routes ---
-app.get("/api/punches", async (req, res) => {
-  try {
-    const punches = await getAllPunches();
-    res.json(punches );     // Always return array
-  } catch (err) {
-    console.error("❌ Error in /api/punches:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post("/api/punchin", async (req, res) => {
-  try {
-    const data = req.body;
-    const result = await savePunch(data);
-    res.json(result);
-  } catch (err) {
-    console.error("❌ Error in /api/punchin:", err);
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// --- Serve frontend build ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-//const frontendPath = path.join(__dirname, "../frontend/build");
-//app.use(express.static(frontendPath));
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 
-// --- For any other route, serve frontend index.html ---
-app.get("*", (req, res) => {
-res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
-//   res.sendFile(path.join(frontendPath, "index.html"));
+// ✅ Punch endpoints
+app.get("/api/punches", async (req, res) => {
+  try {
+    const query = `SELECT META().id, punch_time FROM \`${COUCHBASE_BUCKET}\``;
+    const cluster = bucket.cluster;
+    const result = await cluster.query(query);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch punches" });
+  }
 });
 
-// --- Start server ---
-const PORT = process.env.PORT || 10000;
+app.post("/api/punchin", async (req, res) => {
+  try {
+    const punchTime = req.body.punchTime;
+    const id = `punch::${Date.now()}`;
+    await bucket.defaultCollection().upsert(id, { punch_time: punchTime });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save punch" });
+  }
+});
+
+// ✅ Catch-all: serve frontend
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
+
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import express from "express";
+// import cors from "cors";
+// import bodyParser from "body-parser";
+// import path from "path";
+// import { fileURLToPath } from "url";
+// import { connectToCouchbase, getAllPunches, savePunch } from "./couchbase.js";
+
+// const app = express();
+// app.use(cors());
+// app.use(bodyParser.json());
+
+
+// // --- Couchbase connection ---
+// await connectToCouchbase();
+
+// // --- API routes ---
+// app.get("/api/punches", async (req, res) => {
+//   try {
+//     const punches = await getAllPunches();
+//     res.json(punches );     // Always return array
+//   } catch (err) {
+//     console.error("❌ Error in /api/punches:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+// app.post("/api/punchin", async (req, res) => {
+//   try {
+//     const data = req.body;
+//     const result = await savePunch(data);
+//     res.json(result);
+//   } catch (err) {
+//     console.error("❌ Error in /api/punchin:", err);
+//     res.status(400).json({ error: err.message });
+//   }
+// });
+
+// // --- Serve frontend build ---
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+// //const frontendPath = path.join(__dirname, "../frontend/build");
+// //app.use(express.static(frontendPath));
+// app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+// // --- For any other route, serve frontend index.html ---
+// app.get("*", (req, res) => {
+// res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+// //   res.sendFile(path.join(frontendPath, "index.html"));
+// });
+
+// // --- Start server ---
+// const PORT = process.env.PORT || 10000;
+// app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 
 
 
