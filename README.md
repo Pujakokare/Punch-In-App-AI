@@ -15,6 +15,7 @@ punch-app/
 │
 ├── frontend/      # React app (UI)
 │   ├── src/
+│   │   ├── App.css
 │   │   ├── App.js
 │   │   ├── api.js
 │   │   └── index.js
