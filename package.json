@@ -8,6 +8,6 @@
     "start": "node backend/index.js"
   },
   "engines": {
-    "node": "22.15.00"
+    "node": "22.15.0"
   }
 }
